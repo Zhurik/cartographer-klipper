@@ -1271,6 +1271,11 @@ class CartographerProbeWrapper:
         return self.cartographer.get_probe_params(gcmd)
     def run_probe(self, gcmd):
         return self.cartographer.run_probe(gcmd)
+    def start_probe_session(self, gcmd=None):
+        self.cartographer.multi_probe_begin()
+        return self
+    def end_probe_session(self):
+        self.cartographer.multi_probe_end()
 
 class CartographerTempWrapper:
     def __init__(self, cartographer):
