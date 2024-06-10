@@ -1256,8 +1256,10 @@ class CartographerProbeWrapper:
         return self.cartographer.multi_probe_end()
     def get_offsets(self):
         return self.cartographer.get_offsets()
-    def get_lift_speed(self, gcmd=None):
-        return self.cartographer.get_lift_speed(gcmd)
+    # def get_lift_speed(self, gcmd=None):
+    #     return self.cartographer.get_lift_speed(gcmd)
+    def get_probe_params(self, gcmd=None):
+        return self.cartographer.get_probe_params(gcmd)
     def run_probe(self, gcmd):
         return self.cartographer.run_probe(gcmd)
 
