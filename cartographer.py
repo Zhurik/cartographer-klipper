@@ -216,21 +216,32 @@ class CartographerProbe:
             gcmd = self.dummy_gcode_cmd
         probe_speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.)
         lift_speed = gcmd.get_float("LIFT_SPEED", self.lift_speed, above=0.)
-        samples = gcmd.get_int("SAMPLES", self.sample_count, minval=1)
-        sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST",
-                                             self.sample_retract_dist, above=0.)
-        samples_tolerance = gcmd.get_float("SAMPLES_TOLERANCE",
-                                           self.samples_tolerance, minval=0.)
-        samples_retries = gcmd.get_int("SAMPLES_TOLERANCE_RETRIES",
-                                       self.samples_retries, minval=0)
-        samples_result = gcmd.get("SAMPLES_RESULT", self.samples_result)
-        return {'probe_speed': probe_speed,
-                'lift_speed': lift_speed,
-                'samples': samples,
-                'sample_retract_dist': sample_retract_dist,
-                'samples_tolerance': samples_tolerance,
-                'samples_tolerance_retries': samples_retries,
-                'samples_result': samples_result} 
+        samples = gcmd.get_int("SAMPLES", 10, minval=1)
+        sample_retract_dist = gcmd.get_float(
+            "SAMPLE_RETRACT_DIST",
+            0,
+            above=0.,
+        )
+        samples_tolerance = gcmd.get_float(
+            "SAMPLES_TOLERANCE",
+            0,
+            minval=0.,
+        )
+        samples_retries = gcmd.get_int(
+            "SAMPLES_TOLERANCE_RETRIES",
+            0,
+            minval=0,
+        )
+        samples_result = gcmd.get("SAMPLES_RESULT", 0)
+        return {
+            'probe_speed': probe_speed,
+            'lift_speed': lift_speed,
+            'samples': samples,
+            'sample_retract_dist': sample_retract_dist,
+            'samples_tolerance': samples_tolerance,
+            'samples_tolerance_retries': samples_retries,
+            'samples_result': samples_result,
+        }
 
     def run_probe(self, gcmd):
         if self.model is None:
@@ -238,7 +249,7 @@ class CartographerProbe:
 
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.0)
         allow_faulty = gcmd.get_int("ALLOW_FAULTY_COORDINATE", 0) != 0
-        lift_speed = self.get_lift_speed(gcmd)
+        lift_speed = self.get_probe_params(gcmd)["lift_speed"]
         toolhead = self.printer.lookup_object("toolhead")
         curtime = self.reactor.monotonic()
         if "z" not in toolhead.get_status(curtime)["homed_axes"]:
@@ -642,7 +653,7 @@ class CartographerProbe:
         move_time = toolhead.get_last_move_time()
         settle_clock = self._mcu.print_time_to_clock(move_time)
         samples = []
-        total = skip + count
+        total = skip + countsample_retract_dist
 
         def cb(sample):
             if sample["clock"] >= settle_clock:
@@ -741,7 +752,7 @@ class CartographerProbe:
         self.toolhead.manual_move([None, None, cur_z+overrun], speed)
         self.run_probe(gcmd)
 
-        lift_speed = self.get_lift_speed(gcmd)
+        lift_speed = self.get_probe_params(gcmd)["lift_speed"]
         target = gcmd.get_float("Z", self.trigger_distance)
 
         num_samples = gcmd.get_int("SAMPLES", 20)
@@ -842,7 +853,7 @@ class CartographerProbe:
     cmd_PROBE_ACCURACY_help = "Probe Z-height accuracy at current XY position"
     def cmd_PROBE_ACCURACY(self, gcmd):
         speed = gcmd.get_float("PROBE_SPEED", self.speed, above=0.0)
-        lift_speed = self.get_lift_speed(gcmd)
+        lift_speed = self.get_probe_params(gcmd)["lift_speed"]
         sample_count = gcmd.get_int("SAMPLES", 10, minval=1)
         sample_retract_dist = gcmd.get_float("SAMPLE_RETRACT_DIST", 0)
         allow_faulty = gcmd.get_int("ALLOW_FAULTY_COORDINATE", 0) != 0
@@ -1256,8 +1267,6 @@ class CartographerProbeWrapper:
         return self.cartographer.multi_probe_end()
     def get_offsets(self):
         return self.cartographer.get_offsets()
-    # def get_lift_speed(self, gcmd=None):
-    #     return self.cartographer.get_lift_speed(gcmd)
     def get_probe_params(self, gcmd=None):
         return self.cartographer.get_probe_params(gcmd)
     def run_probe(self, gcmd):
