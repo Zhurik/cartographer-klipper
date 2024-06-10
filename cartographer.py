@@ -653,7 +653,7 @@ class CartographerProbe:
         move_time = toolhead.get_last_move_time()
         settle_clock = self._mcu.print_time_to_clock(move_time)
         samples = []
-        total = skip + countsample_retract_dist
+        total = skip + count
 
         def cb(sample):
             if sample["clock"] >= settle_clock:
